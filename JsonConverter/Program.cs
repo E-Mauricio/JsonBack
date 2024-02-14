@@ -37,8 +37,6 @@ namespace JsonConverter
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseStaticFiles();
-
             app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
             app.MapControllers();
