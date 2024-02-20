@@ -21,43 +21,47 @@ namespace JsonConverter.Controllers
         {
 
             //SAve file to wwwroot
-            var content = TestReadExcelFile(@"C:\Users\re3ne\OneDrive\Escritorio\Excel\archivo muestra_Json.xlsx", out List<DataTest> jsonRecords);            
+            var content = TestReadExcelFile(@"C:\Users\re3ne\OneDrive\Escritorio\Excel\archivo muestra_Json.xlsx", out List<DataTest> jsonRecords);
 
             return Ok(jsonRecords);
 
+        }
+
+        [HttpPost("Ping")]
+        public ActionResult<string> Pong([FromBody] string name)
+        {
+            return "Pong" + name;
         }
 
         [HttpPost("SubirArchivo")]
         [DisableRequestSizeLimit]
         public async Task<ActionResult<List<DataTest>>> SubirArchivo([FromForm] IFormFile file)
         {
-           
-            //var file = Request.Form.Files[0];
-
-            List<IFormFile> files = new List<IFormFile> { file };
 
             List<DataTest> json = new List<DataTest>();
 
             // full path to file in temp location
             try
             {
-                foreach (var formFile in files)
+
+                var filePath = Path.Combine(_host.WebRootPath, "Excel", file.FileName);
+                if (file.Length > 0)
                 {
-                    var filePath = Path.Combine(_host.WebRootPath, "Excel", formFile.FileName);
-                    if (formFile.Length > 0)
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await formFile.CopyToAsync(stream);
-                        }
-
-                        TestReadExcelFile(filePath, out json);
-
+                        await file.CopyToAsync(stream);
                     }
-                    
                 }
 
-                return Ok(json);
+                if (TestReadExcelFile(filePath, out json))
+                {
+                    return Ok(json);
+                }
+                else
+                {
+                    return BadRequest("Formato incompatible.");
+                }
+
             }
             catch (Exception ex)
             {

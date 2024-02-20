@@ -31,6 +31,12 @@ namespace JsonConverter
 
             var app = builder.Build();
 
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
+            app.UseCors(policy => 
+                policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -38,15 +44,10 @@ namespace JsonConverter
                 app.UseSwaggerUI();
             }
 
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-            app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
             app.MapControllers();
 
