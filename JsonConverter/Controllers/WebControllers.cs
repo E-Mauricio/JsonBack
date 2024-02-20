@@ -2,6 +2,7 @@
 using JsonConverter.model;
 using OfficeOpenXml;
 using System.Linq;
+using Microsoft.Extensions.Options;
 
 namespace JsonConverter.Controllers
 {
@@ -9,23 +10,59 @@ namespace JsonConverter.Controllers
     [Route("api/[controller]")]
     public class WebControllers : Controller
     {
-        [HttpPost]
-        public ActionResult<List<User>> UploadFile([FromBody] User newUser)
+        private readonly IWebHostEnvironment _host;
+        public WebControllers(IWebHostEnvironment host)
         {
-            var list = new List<User>();
+            _host = host;
+        }
 
-            var word = newUser.CorreoElectronico + " TEST " + newUser.NombreEgresado;
+        [HttpPost]
+        public ActionResult<List<DataTest>> UploadFile()
+        {
 
-            var response = new User();
+            //SAve file to wwwroot
+            var content = TestReadExcelFile(@"C:\Users\re3ne\OneDrive\Escritorio\Excel\archivo muestra_Json.xlsx", out List<DataTest> jsonRecords);            
 
-            response.NombreEgresado = word;
+            return Ok(jsonRecords);
 
-            var content = TestReadExcelFile(@"C:\Users\re3ne\OneDrive\Escritorio\Excel\archivo muestra_Json.xlsx", out List<DataTest> listUsers);
+        }
 
-            list.Add(response);
+        [HttpPost("SubirArchivo")]
+        [DisableRequestSizeLimit]
+        public async Task<ActionResult<List<DataTest>>> SubirArchivo([FromForm] IFormFile file)
+        {
+           
+            //var file = Request.Form.Files[0];
 
-            return Ok(listUsers);
+            List<IFormFile> files = new List<IFormFile> { file };
 
+            List<DataTest> json = new List<DataTest>();
+
+            // full path to file in temp location
+            try
+            {
+                foreach (var formFile in files)
+                {
+                    var filePath = Path.Combine(_host.WebRootPath, "Excel", formFile.FileName);
+                    if (formFile.Length > 0)
+                    {
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await formFile.CopyToAsync(stream);
+                        }
+
+                        TestReadExcelFile(filePath, out json);
+
+                    }
+                    
+                }
+
+                return Ok(json);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { ex.Message, ex.StackTrace });
+            }
         }
 
         private bool TestReadExcelFile(string filePath, out List<DataTest> entries)
@@ -56,17 +93,6 @@ namespace JsonConverter.Controllers
                             int column = 1;
 
                             bool contentType = false;
-
-                            //while (workSheet.Cells[column, 1].Value != DateTime)
-                            //{
-                            //    if ()
-                            //    {
-
-                            //    }
-
-                            //    initialRow++;
-                            //    column++;
-                            //}
 
                             for (int i = 7; i <= totalRows; i++)
                             {

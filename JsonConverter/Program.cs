@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http.Features;
+
 namespace JsonConverter
 {
     public class Program
@@ -17,6 +19,12 @@ namespace JsonConverter
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.Configure<FormOptions>(x =>
+            {
+                x.ValueLengthLimit = int.MaxValue;
+                x.MultipartBodyLengthLimit = int.MaxValue; // In case of multipart
+            });
+
             builder.Services.AddAuthorization();
 
             builder.Services.AddSingleton<IConfiguration>(builderConfiguration.Build());
@@ -30,6 +38,7 @@ namespace JsonConverter
                 app.UseSwaggerUI();
             }
 
+            app.UseDefaultFiles();
             app.UseStaticFiles();
 
             app.UseHttpsRedirection();
